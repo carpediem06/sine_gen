@@ -1,6 +1,6 @@
-# sinus_gen
+# sine_gen
 
-To generate a sinus waveform (.wav) file.
+To generate a sine waveform (.wav) file.
 Forked from https://github.com/moutend/getSineWave
 
 ## Compile

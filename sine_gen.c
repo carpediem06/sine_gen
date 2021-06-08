@@ -16,7 +16,7 @@ typedef struct {
 int getSineWave( t_wave_param *sw );
 
 void usage() {
-	printf( "Usage: sinus_gen [OPTION] ...\n" );
+	printf( "Usage: sine_gen [OPTION] ...\n" );
 	printf( "  -c  : channels          [nb]	 		(default 1)\n" );
 	printf( "  -b  : sample resolution [bits]  	(default 16)\n" );
 	printf( "  -r  : sampling rate 		 [Hz]			(default 44100)\n" );
