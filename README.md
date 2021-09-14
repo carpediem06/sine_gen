@@ -1,6 +1,9 @@
 # sine_gen
 
-To generate a sine waveform (.wav) file.
+Tool to generate:
+* **[*(.wav)*](https://en.wikipedia.org/wiki/WAV#cite_note-MPI1-3)** : a sine waveform (.wav) file.
+* **[*(.txt)*](https://www.asciitable.com/)** : a sine hex 		 (.txt) file.
+* **[*(.pdf)*](http://www.gnuplot.info/)** : a sine plot 		 (.pdf) file.
 
 From https://github.com/moutend/getSineWave
 
