@@ -33,18 +33,16 @@ DEM_FILE=sine_plot.dem
 # 	E8  		5274.04					6.54
 # 	B8  		7902.13					4.37
 #------------------------------------------------
-for SINE_FREQ in 440 #523 523 523 587 659 587 523 659 587 587 523 440 739 783 1046 2794 5274 7902
+for SINE_FREQ in 523 523 523 587 659 587 523 659 587 587 523 440 739 783 1046 2794 5274 7902
 do
 	./sine_gen -c 1 -b ${NB_BITS} -r ${SAMPLING_RATE} -f ${SINE_FREQ} -s ${NB_CH}
 	cvlc --play-and-exit  ${NB_BITS}bit-${SAMPLING_RATE}Hz-sineWave-${NB_CH}ch_${SINE_FREQ}Hz.wav
-	echo "#!/usr/bin/gnuplot" >> ${DEM_FILE}
-	echo "set terminal pngcairo size 350,262 enhanced font 'Verdana,10'" > ${DEM_FILE}
-	echo "set output 'sine_${SINE_FREQ}Hz.png'" > ${DEM_FILE}
-	echo "set style line 1 \ " > ${DEM_FILE}
-	echo "    linecolor rgb '#0060ad' \ " > ${DEM_FILE}
-	echo "    linetype 1 linewidth 1 \ " > ${DEM_FILE}
-	echo "    pointtype 7 pointsize 0.5" > ${DEM_FILE}
-	echo "plot 'sine_${SINE_FREQ}Hz.dat' with linespoints linestyle 1" > ${DEM_FILE}
+
+	echo "#!/usr/bin/gnuplot" > ${DEM_FILE}
+	echo "set terminal pngcairo size 350,262 enhanced font 'Verdana,10'" >> ${DEM_FILE}
+	echo "set output 'sine_${SINE_FREQ}Hz.png'" >> ${DEM_FILE}
+	echo "set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 1 pointtype 7 pointsize 0.5" >> ${DEM_FILE}
+	echo "plot 'sine_${SINE_FREQ}Hz.dat' with linespoints linestyle 1" >> ${DEM_FILE}
 	gnuplot -persist sine_plot.dem
 
 done
