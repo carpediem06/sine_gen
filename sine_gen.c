@@ -75,11 +75,19 @@ int getSineHex( t_wave_param *param )
 {
 
 	FILE* file;
+	FILE* dat;
 	long i, data, data_size;
 	double raw_data;
 	char filename[128];
+	
 	sprintf(filename,"sine_%ldHz.txt",  (long)param->sine_freq);
 	if ( ( file = fopen(filename, "wb" ) ) == NULL ) {
+		fprintf(stderr, "FAIL : fopen() %s\n", filename );
+		return -1;
+	}
+	
+	sprintf(filename,"sine_%ldHz.dat",  (long)param->sine_freq);
+	if ( ( dat = fopen(filename, "wb" ) ) == NULL ) {
 		fprintf(stderr, "FAIL : fopen() %s\n", filename );
 		return -1;
 	}
@@ -89,6 +97,8 @@ int getSineHex( t_wave_param *param )
 	data_size = data_size / param->sine_freq;
 
 	fprintf(file,"uint8_t sine_%ldHz[%ld] = { ", (long)param->sine_freq, (long)(data_size * ( param->nb_bits / 8 )));
+	
+	fprintf(dat,"# Angle   Radian\n");
 
 	for(i = 0; i < data_size; i++) {
 		if ((i % 8) == 0) {
@@ -108,19 +118,23 @@ int getSineHex( t_wave_param *param )
 					fprintf(file,"0x%02X, 0x%02X",(unsigned char)(data >> 8)&0xFF,
 																	 (unsigned char)(data&0xFF));
 		}
-		if (param->nb_bits/8 == 1)
-				fprintf(file,"0x%02X", (unsigned char)data);
-		else
+		if (param->nb_bits/8 == 1) {
+				fprintf(file,"0x%02X", (unsigned char)data);	
+		} else {
 				fprintf(file,"0x%02X, 0x%02X",(unsigned char)(data >> 8)&0xFF,
 																	 (unsigned char)(data&0xFF));
+		}
+		fprintf(dat," %ld   %.2f\n",i,(float)data);
 		if (i + 1 < data_size)
 			fprintf(file,", ");
 	}
 
 	fprintf(file,"\n};\n");
 	fclose(file);
+	fclose(dat);
 	return 0;
 }
+
 
 int getsine_params( t_wave_param* param ) {
 	double raw_data;

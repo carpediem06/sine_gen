@@ -3,7 +3,7 @@
 Tool to generate:
 * **[*(.wav)*](https://en.wikipedia.org/wiki/WAV#cite_note-MPI1-3)** : a sine waveform (.wav) file.
 * **[*(.txt)*](https://www.asciitable.com/)** : a sine hex 		 (.txt) file.
-* **[*(.pdf)*](http://www.gnuplot.info/)** : a sine plot 		 (.pdf) file.
+* **[*(.png)*](http://www.gnuplot.info/)** : a sine plot 		 (.png) file.
 
 From https://github.com/moutend/getSineWave
 
