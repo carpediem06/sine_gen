@@ -6,44 +6,47 @@
 #define PI 3.141592
 
 typedef struct {
-	unsigned ch;
-	unsigned bits;
-	unsigned rate;
-	unsigned fs;
-	unsigned sec;
+	unsigned char nb_channels;
+	unsigned char nb_bits;
+	unsigned short sampling_rate;
+	unsigned short sine_freq;
+	unsigned char sec;
 } t_wave_param;
 
-int getSineWave( t_wave_param *sw );
+int getSineHex( t_wave_param *param );
+int getsine_params( t_wave_param *param );
 
-void usage() {
+void usage()
+{
 	printf( "Usage: sine_gen [OPTION] ...\n" );
 	printf( "  -c  : channels          [nb]	 		(default 1)\n" );
-	printf( "  -b  : sample resolution [bits]  	(default 16)\n" );
+	printf( "  -b  : sample resolution [nb]  	  (default 16)\n" );
 	printf( "  -r  : sampling rate 		 [Hz]			(default 44100)\n" );
 	printf( "  -f  : frequency 				 [Hz]     (default 440)\n" );
 	printf( "  -s  : duration          [sec]  	(default 4)\n" );
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char* argv[] )
+{
 	int option;
-	t_wave_param sinewave = { 1, 16, 44100, 440, 5 };
+	t_wave_param sine_params = { 1, 16, 44100, 440, 1 };
 	
 	while( ( option = getopt( argc, argv, "c:b:r:f:s:h" ) ) != EOF ) {
 		switch( option ) {
 		case 99:
-			sinewave.ch = ( unsigned )atoi( optarg );
+			sine_params.nb_channels = ( unsigned )atoi( optarg );
 			break;
 		case 'b':
-			sinewave.bits = ( unsigned )atoi( optarg );
+			sine_params.nb_bits = ( unsigned )atoi( optarg );
 			break;
 		case 'r':
-			sinewave.rate = ( unsigned )atoi( optarg );
+			sine_params.sampling_rate = ( unsigned )atoi( optarg );
 			break;
 		case 'f':
-			sinewave.fs = ( unsigned )atoi( optarg );
+			sine_params.sine_freq = ( unsigned )atoi( optarg );
 			break;
 		case 's':
-			sinewave.sec = ( unsigned )atoi( optarg );
+			sine_params.sec = ( unsigned )atoi( optarg );
 			break;
 		case 'h':
 			usage();
@@ -53,18 +56,79 @@ int main( int argc, char* argv[] ) {
 //		argv += optind;
 //		printf( "%s\n", optarg );
 	}
-//	printf( "%d %d %d %d %d \n", sinewave.bits, sinewave.ch, sinewave.rate, sinewave.fs, sinewave.sec );
-	getSineWave( &sinewave );
+	/* Chirp detection */
+  /*if (sine_params.sine_freq == 0) {
+			getSineHex( &sine_params );
+		getsine_params( &sine_params );
+	} else*/
+	{
+	//	printf( "%d %d %d %d %d \n", sine_params.nb_bits, sine_params.nb_channels, sine_params.sampling_rate, sine_params.sine_freq, sine_params.sec );
+		getSineHex( &sine_params );
+		getsine_params( &sine_params );
+	}
+
 	return 0;
 }
 
-int getSineWave( t_wave_param* sw ) {
+
+int getSineHex( t_wave_param *param )
+{
+
+	FILE* file;
+	long i, data, data_size;
 	double raw_data;
-	long i, data, var_long;
+	char filename[128];
+	sprintf(filename,"sine_%ldHz.txt",  (long)param->sine_freq);
+	if ( ( file = fopen(filename, "wb" ) ) == NULL ) {
+		fprintf(stderr, "FAIL : fopen() %s\n", filename );
+		return -1;
+	}
+
+	/* 1 cycle */
+	data_size = (( param->nb_bits / 8 ) * param->nb_channels * param->sampling_rate * param->sec);
+	data_size = data_size / param->sine_freq;
+
+	fprintf(file,"uint8_t sine_%ldHz[%ld] = { ", (long)param->sine_freq, (long)(data_size * ( param->nb_bits / 8 )));
+
+	for(i = 0; i < data_size; i++) {
+		if ((i % 8) == 0) {
+			fprintf(file,"\n/* %03ld */ ", i*( param->nb_bits / 8 ));
+		}
+
+		raw_data = sin( 2 * PI * param->sine_freq * i / param->sampling_rate ) * ( pow( 2, param->nb_bits) / 2 - 1 );
+		data = ( long )raw_data;
+		if( param->nb_bits == 8 ) {
+			data += 128;
+		}
+		if( param->nb_channels == 2 ) {
+			// L, R, ...
+			if (param->nb_bits/8 == 1)
+					fprintf(file,"0x%02X", (unsigned char)data);
+			else
+					fprintf(file,"0x%02X, 0x%02X",(unsigned char)(data >> 8)&0xFF,
+																	 (unsigned char)(data&0xFF));
+		}
+		if (param->nb_bits/8 == 1)
+				fprintf(file,"0x%02X", (unsigned char)data);
+		else
+				fprintf(file,"0x%02X, 0x%02X",(unsigned char)(data >> 8)&0xFF,
+																	 (unsigned char)(data&0xFF));
+		if (i + 1 < data_size)
+			fprintf(file,", ");
+	}
+
+	fprintf(file,"\n};\n");
+	fclose(file);
+	return 0;
+}
+
+int getsine_params( t_wave_param* param ) {
+	double raw_data;
+	long i, data, data_size;
 	char str[256];
 	FILE* fp;
 
-	sprintf(str, "%dbit-%dHz-sineWave-%dch_%dHz.wav", ( *sw ).bits, ( *sw ).rate, ( *sw ).ch, ( *sw ).fs );
+	sprintf(str, "%dbit-%dHz-sineWave-%dch_%dHz.wav", param->nb_bits, param->sampling_rate, param->nb_channels, param->sine_freq );
 	if ( ( fp = fopen(str, "wb" ) ) == NULL ) {
 		fputs( "ERR : fopen() failed\n", stderr );
 		return -1;
@@ -78,11 +142,11 @@ int getSineWave( t_wave_param* sw ) {
 	17-20	16	Length of format data as listed above
 	21-22	1	Type of format (1 is PCM) - 2 byte integer
 	23-24	2	Number of Channels - 2 byte integer
-	25-28	44100	Sample Rate - 32 byte integer. 
-				Common values are 44100 (CD), 48000 (DAT). Sample Rate = Number of Samples per second, or Hertz.
-	29-32	176400	(Sample Rate * BitsPerSample * Channels) / 8.
-	33-34	4	(BitsPerSample * Channels) / 8.1 - 8 bit mono2 - 8 bit stereo/16 bit mono4 - 16 bit stereo
-	35-36	16	Bits per sample
+	25-28	44100	Sample sampling_rate - 32 byte integer.
+				Common values are 44100 (CD), 48000 (DAT). Sample sampling_rate = Number of Samples per second, or Hertz.
+	29-32	176400	(Sample sampling_rate * nb_bitsPerSample * Channels) / 8.
+	33-34	4	(nb_bitsPerSample * Channels) / 8.1 - 8 bit mono2 - 8 bit stereo/16 bit mono4 - 16 bit stereo
+	35-36	16	nb_bits per sample
 	37-40	“data”	“data” chunk header. Marks the beginning of the data section.
 	41-44	File size (data)	Size of the data section.
 				Sample values are given above for a 16-bit stereo source.		
@@ -96,8 +160,8 @@ int getSineWave( t_wave_param* sw ) {
 	fwrite( str, 1, 4, fp );
 
 	// File size ( with header 36 bytes)
-	var_long = ( ( *sw ).bits / 8 ) * ( *sw ).ch * ( *sw ).rate  * ( *sw ).sec + 36;
-	fwrite( &var_long, 1, 4, fp );
+	data_size = ( param->nb_bits / 8 ) *param->nb_channels * param->sampling_rate  * param->sec + 36;
+	fwrite( &data_size, 1, 4, fp );
 
 	// "WAVE" header
 	str[0] = 'W';
@@ -114,33 +178,33 @@ int getSineWave( t_wave_param* sw ) {
 	fwrite( str, 1, 4, fp );
 
 	// Bytes of fmt chunk (Linear PCM = 16)
-	var_long = 16;
-	fwrite( &var_long, 4, 1, fp );
+	data_size = 16;
+	fwrite( &data_size, 4, 1, fp );
 
 	// Format ID (Linear PCM = 1)
-	var_long = 1;
-	fwrite( &var_long, 2, 1, fp );
+	data_size = 1;
+	fwrite( &data_size, 2, 1, fp );
 
 	// Channel
-	var_long = ( *sw ).ch;
-	fwrite( &var_long, 2, 1, fp );
+	data_size = param->nb_channels;
+	fwrite( &data_size, 2, 1, fp );
 
-	// Sampling rate [Hz]
-	var_long = ( *sw ).rate;
-	fwrite( &var_long, 4, 1, fp );
-	//fwrite( &rate, 4, 1, fp );
+	// Sampling sampling_rate [Hz]
+	data_size = param->sampling_rate;
+	fwrite( &data_size, 4, 1, fp );
+	//fwrite( &sampling_rate, 4, 1, fp );
 
 	// Bytes per sec
-	var_long = ( ( *sw ).bits / 8 ) * ( *sw ).ch * ( *sw ).rate;
-	fwrite( &var_long, 4, 1, fp );
+	data_size = ( param->nb_bits / 8 ) * param->nb_channels * param->sampling_rate;
+	fwrite( &data_size, 4, 1, fp );
 
 	// Bytes per sample * channels
-	var_long = ( ( *sw ).bits / 8 ) * ( *sw ).ch;
-	fwrite( &var_long, 2, 1, fp );
+	data_size = ( param->nb_bits / 8 ) * param->nb_channels;
+	fwrite( &data_size, 2, 1, fp );
 
-	// Bits per sample
-	var_long = ( *sw ).bits;
-	fwrite( &var_long, 2, 1, fp );
+	// nb_bits per sample
+	data_size = param->nb_bits;
+	fwrite( &data_size, 2, 1, fp );
 
 	// "data" chunk
 	str[0] = 'd';
@@ -150,24 +214,24 @@ int getSineWave( t_wave_param* sw ) {
 	fwrite( str, 1, 4, fp );
 
 	// Data size (Bytes)
-	var_long = ( ( *sw ).bits / 8 ) * ( *sw ).ch * ( *sw ).rate * ( *sw ).sec;
-	fwrite( &var_long, 4, 1, fp );
+	data_size = ( param->nb_bits / 8 ) * param->nb_channels * param->sampling_rate * param->sec;
+	fwrite( &data_size, 4, 1, fp );
 
-	printf("  make %2dch %dbit %dHz --- %8dHz %dsec ... ", ( *sw ).ch, ( *sw ).bits, ( *sw ).rate, ( *sw ).fs, ( *sw ).sec);
-	var_long = ( *sw ).rate * ( *sw ).sec;
-	for(i = 0; i < var_long; i++) {
-		raw_data = sin( 2 * PI * ( *sw ).fs * i / ( *sw ).rate ) * ( pow( 2, ( *sw ).bits) / 2 - 1 );
+	printf("  make %2dch %dbit %dHz --- %8dHz %dsec ... ", param->nb_channels, param->nb_bits, param->sampling_rate, param->sine_freq, param->sec);
+	data_size = param->sampling_rate * param->sec;
+	for(i = 0; i < data_size; i++) {
+		raw_data = sin( 2 * PI * param->sine_freq * i / param->sampling_rate ) * ( pow( 2, param->nb_bits) / 2 - 1 );
 		data = ( long )raw_data;
-		if( ( *sw ).bits == 8 ) {
+		if( param->nb_bits == 8 ) {
 			data += 128;
 		}
-		if( ( *sw ).ch == 2 ) {
+		if( param->nb_channels == 2 ) {
 			// L, R, L, R, ...
-			fwrite( &data, ( ( *sw ).bits / 8 ), 1, fp );
+			fwrite( &data, ( param->nb_bits / 8 ), 1, fp );
 		}
-		fwrite( &data, ( ( *sw ).bits / 8 ), 1, fp );
+		fwrite( &data, ( param->nb_bits / 8 ), 1, fp );
 	}
-	printf("OK\n");
+	printf("Done.\n");
 
 	fclose( fp );
 	return 0;
