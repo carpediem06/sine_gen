@@ -94,7 +94,8 @@ int getSineHex( t_wave_param *param )
 
 	/* 1 cycle */
 	data_size = (( param->nb_bits / 8 ) * param->nb_channels * param->sampling_rate * param->sec);
-	data_size = data_size / param->sine_freq;
+	//data_size = data_size / param->sine_freq;
+	data_size = (param->sampling_rate / param->sine_freq) + 2;
 
 	fprintf(file,"uint8_t sine_%ldHz[%ld] = { ", (long)param->sine_freq, (long)(data_size * ( param->nb_bits / 8 )));
 	
@@ -124,7 +125,9 @@ int getSineHex( t_wave_param *param )
 				fprintf(file,"0x%02X, 0x%02X",(unsigned char)(data >> 8)&0xFF,
 																	 (unsigned char)(data&0xFF));
 		}
+
 		fprintf(dat," %ld   %.2f\n",i,(float)data);
+
 		if (i + 1 < data_size)
 			fprintf(file,", ");
 	}

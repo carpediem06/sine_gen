@@ -1,5 +1,9 @@
 #!/usr/bin/gnuplot
-set terminal pngcairo size 350,262 enhanced font 'Verdana,10'
-set output 'sine_440Hz.png'
-set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 1 pointtype 7 pointsize 0.5
-plot 'sine_440Hz.dat' with linespoints linestyle 1
+set title 'Sine 440Hz (Fs=44100Hz, 16bits, 1ch)' font 'Verdana,18' tc lt 3
+set xlabel 'Samples' tc lt 4
+set ylabel 'Amplitude' tc lt 4
+set grid ytics mytics
+set mytics 1
+set grid
+set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 1 pointtype 7 pointsize 0.5 
+plot 'sine_440Hz.dat' with linespoints linestyle 1 notitle
