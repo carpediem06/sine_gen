@@ -30,7 +30,7 @@ DEM_FILE=${OUTDIR}/sine_plot.dem
 # 	E8  		5274.04					6.54
 # 	B8  		7902.13					4.37
 #------------------------------------------------
-for SINE_FREQ in 523 523 587 659 587 523 659 587 587 523 440 739 783 1046 2794 5274 7902
+for SINE_FREQ in 440 # 523 523 587 659 587 523 659 587 587 523 440 739 783 1046 2794 5274 7902
 do
 	./sine_gen -c 1 -b ${NB_BITS} -r ${SAMPLING_RATE} -f ${SINE_FREQ} -s ${NB_CH}
 	mv *.wav ${OUTDIR}
@@ -39,9 +39,9 @@ do
 	cvlc --play-and-exit  ${OUTDIR}/${NB_BITS}bit-${SAMPLING_RATE}Hz-sineWave-${NB_CH}ch_${SINE_FREQ}Hz.wav
 
 	echo "#!/usr/bin/gnuplot" > ${DEM_FILE}
-	#echo "set terminal pngcairo size 350,262 enhanced font 'Verdana,10'" >> ${DEM_FILE}
+	#echo "set terminal pngcairo size 500,262 enhanced font 'Verdana,10'" >> ${DEM_FILE}
 	#echo "set output 'sine_${SINE_FREQ}Hz.png'" >> ${DEM_FILE}
-	echo "set title 'Sine ${SINE_FREQ}Hz (Fs=${SAMPLING_RATE}Hz, ${NB_BITS}bits, ${NB_CH}ch)' font 'Verdana,18' tc lt 3" >> ${DEM_FILE}
+	echo "set title 'Sine ${SINE_FREQ}Hz (Fs=${SAMPLING_RATE}Hz, ${NB_BITS}bits, ${NB_CH}ch)' font 'Verdana,16' tc lt 3" >> ${DEM_FILE}
 	echo "set xlabel 'Samples' tc lt 4" >> ${DEM_FILE}
 	echo "set ylabel 'Amplitude' tc lt 4" >> ${DEM_FILE}
 	echo "set grid ytics mytics" >> ${DEM_FILE}

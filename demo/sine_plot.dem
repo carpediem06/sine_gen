@@ -1,5 +1,7 @@
 #!/usr/bin/gnuplot
-set title 'Sine 440Hz (Fs=44100Hz, 16bits, 1ch)' font 'Verdana,18' tc lt 3
+set terminal pngcairo size 500,262 enhanced font 'Verdana,10'
+set output 'sine_440Hz.png'
+set title 'Sine 440Hz (Fs=44100Hz, 16bits, 1ch)' font 'Verdana,16' tc lt 3
 set xlabel 'Samples' tc lt 4
 set ylabel 'Amplitude' tc lt 4
 set grid ytics mytics
